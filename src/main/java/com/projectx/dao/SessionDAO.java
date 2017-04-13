@@ -3,17 +3,21 @@ package com.projectx.dao;
 import com.projectx.model.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 
 /**
  * Created by ivan on 13.04.17.
@@ -32,7 +36,7 @@ public class SessionDAO {
 
     void initTable() {
         final String createTable = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + '(' +
-                "id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +        // Up to 16.777.215 rows
+                "id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                 "token CHAR(60) NOT NULL," +
                 "user_id MEDIUMINT UNSIGNED NOT NULL," +
                 "FOREIGN KEY(user_id) REFERENCES " + UserDAO.TABLE_NAME + "(id) " +
@@ -44,29 +48,31 @@ public class SessionDAO {
     }
 
 
-    public boolean addSession(String token, long userId) {
-        try {
-            final String query = "INSERT INTO " + TABLE_NAME +
-                    " (token, user_id) VALUES (?,?);";
-            template.update(query, token, userId);
-            return true;
-        }
-        catch (DuplicateKeyException ex) {
-            return false;
-        }
+    public long addSession(Session session) {
+        final KeyHolder keyHolder = new GeneratedKeyHolder();
+        template.update(new SessionPstCreator(session), keyHolder);
+        final Map<String, Object> keys = keyHolder.getKeys();
+        BigInteger id =  (BigInteger) keys.get("GENERATED_KEY");
+        return id.longValue();
     }
 
-
-    public Long getUserId(String token)  {
-        final String query = "SELECT user_id FROM " + TABLE_NAME + " WHERE token = ?";
+    public Session getSession(long sessionId)  {
+        final String query = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?";
         try {
-            return template.queryForObject(query, Long.class, token);
+            return template.queryForObject(query, sessionMapper, sessionId);
         }
         catch (EmptyResultDataAccessException ex) {
             return null;
         }
     }
 
+    private final RowMapper<Session> sessionMapper = (rs, i) -> {
+        final Session session = new Session();
+        session.setId(rs.getLong("id"));
+        session.setToken(rs.getString("token"));
+        session.setUserId(rs.getLong("user_id"));
+        return session;
+    };
 
     private static class SessionPstCreator implements PreparedStatementCreator {
         private final Session session;

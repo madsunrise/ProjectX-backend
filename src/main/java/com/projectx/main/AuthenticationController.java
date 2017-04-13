@@ -3,6 +3,7 @@ package com.projectx.main;
 import com.projectx.dao.SessionDAO;
 import com.projectx.dao.UserDAO;
 import com.projectx.exception.DuplicateEntryException;
+import com.projectx.model.Session;
 import com.projectx.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 
 import static com.projectx.dao.UserDAO.*;
 
@@ -37,7 +41,7 @@ public class AuthenticationController {
 
 
     @RequestMapping(path = "/signup", method = RequestMethod.POST)
-    public ResponseEntity<?> signup(@RequestBody SignupRequest request) {
+    public ResponseEntity<?> signup(@RequestBody SignupRequest request, HttpServletResponse httpServletResponse) {
         final String name = request.getName();
         final String email = request.getEmail();
         final String phone = request.getPhone();
@@ -70,23 +74,25 @@ public class AuthenticationController {
 
 
         logger.debug("Creating new user with email \"{}\" is successful", email);
-        AuthResponse response = new AuthResponse();
         String time = String.valueOf(System.currentTimeMillis());
-        String token = passwordEncoder.encode(time);
-        response.setToken(token);
-        boolean success = sessionDAO.addSession(token, user.getId());
-        if (success) {
-            return ResponseEntity.ok(response);
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Cannot generate token");
-        }
+        String token = passwordEncoder.encode(time);;
+
+        Session session = new Session(passwordEncoder.encode(token), user.getId());
+        long sessionId = sessionDAO.addSession(session);
+
+        Cookie cookie1 = new Cookie("token", token);
+        cookie1.setHttpOnly(true);
+        httpServletResponse.addCookie(cookie1);
+        Cookie cookie2 = new Cookie("session_id", String.valueOf(sessionId));
+        cookie2.setHttpOnly(true);
+        httpServletResponse.addCookie(cookie2);
+        return ResponseEntity.ok(null);
     }
 
 
 
     @RequestMapping(path = "/login", method = RequestMethod.POST)
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse httpServletResponse) {
         final String login = request.getLogin();
         final String password = request.getPassword();
 
@@ -104,20 +110,22 @@ public class AuthenticationController {
 
         if (passwordEncoder.matches(password, user.getPassword())) {
             logger.debug("Authorization OK for user with login = {}", login);
-            AuthResponse response = new AuthResponse();
             String time = String.valueOf(System.currentTimeMillis());
             String token = passwordEncoder.encode(time);
-            response.setToken(token);
-            boolean success = sessionDAO.addSession(token, user.getId());
-            if (success) {
-                return ResponseEntity.ok(response);
-            }
-            else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Cannot generate token");
-            }
+
+            Session session = new Session(passwordEncoder.encode(token), user.getId());
+            long sessionId = sessionDAO.addSession(session);
+
+            Cookie cookie1 = new Cookie("token", token);
+            cookie1.setHttpOnly(true);
+            httpServletResponse.addCookie(cookie1);
+            Cookie cookie2 = new Cookie("session_id", String.valueOf(sessionId));
+            cookie2.setHttpOnly(true);
+            httpServletResponse.addCookie(cookie2);
+            return ResponseEntity.ok(null);
         }
 
-        logger.debug("Authorization failed - incorrect password for user {}", login);
+        logger.debug("Authorization failed - incorrect password for user with login {}", login);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 

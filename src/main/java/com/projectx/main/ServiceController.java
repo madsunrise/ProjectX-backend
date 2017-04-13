@@ -2,12 +2,13 @@ package com.projectx.main;
 
 import com.projectx.dao.ServiceDAO;
 import com.projectx.dao.SessionDAO;
-import com.projectx.dao.UserDAO;
 import com.projectx.model.Service;
+import com.projectx.model.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,15 +21,15 @@ import static com.projectx.dao.ServiceDAO.SERVICE_NAME_LENGTH;
  */
 @RestController
 public class ServiceController {
-    private final UserDAO userDAO;
     private final SessionDAO sessionDAO;
     private final ServiceDAO serviceDAO;
+    private final PasswordEncoder passwordEncoder;
 
 
-    public ServiceController(UserDAO userDAO, SessionDAO sessionDAO, ServiceDAO serviceDAO) {
-        this.userDAO = userDAO;
+    public ServiceController(SessionDAO sessionDAO, ServiceDAO serviceDAO, PasswordEncoder passwordEncoder) {
         this.sessionDAO = sessionDAO;
         this.serviceDAO = serviceDAO;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @RequestMapping(path = "/fill_random", method = RequestMethod.GET)
@@ -66,8 +67,17 @@ public class ServiceController {
     }
 
 
+
     @RequestMapping(path = "/services", method = RequestMethod.POST)
-    public ResponseEntity<?> createService(@RequestBody ServiceRequest request) {
+    public ResponseEntity<?> createService(@CookieValue(required = false, name = "session_id") Long sessionId,
+                                           @CookieValue(required = false) String token,
+                                           @RequestBody ServiceRequest request) {
+
+        if (sessionId == null || StringUtils.isEmpty(token)) {
+            logger.debug("No cookie is represented");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to create service");
+        }
+
         String name = request.getName();
         String description = request.getDescription();
         int price = request.getPrice();
@@ -82,7 +92,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Service name too long");
         }
 
-        Long userId = sessionDAO.getUserId("$2a$10$8FkXscJrko56Y4r7CWVoOe3XFHJx9lccEZuzRL7WJCkN0f127Im/.");
+        Long userId = findUserByToken(sessionId, token);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to create new service");
         }
@@ -92,6 +102,11 @@ public class ServiceController {
         logger.debug("Added new service by userID = {}: {}", userId, service);
         return ResponseEntity.ok(null);
     }
+
+
+
+
+
 
 
     @RequestMapping(path = "/services/{id}", method = RequestMethod.GET)
@@ -108,7 +123,16 @@ public class ServiceController {
     }
 
     @RequestMapping(path = "/services/{id}", method = RequestMethod.PUT)
-    public ResponseEntity<?> updateServiceInfo(@PathVariable(name = "id") long serviceId, @RequestBody ServiceRequest request) {
+    public ResponseEntity<?> updateServiceInfo(@CookieValue(required = false, name = "session_id") Long sessionId,
+                                               @CookieValue(required = false) String token,
+                                               @PathVariable(name = "id") long serviceId,
+                                               @RequestBody ServiceRequest request) {
+
+        if (sessionId == null || StringUtils.isEmpty(token)) {
+            logger.debug("No cookie is represented");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to update service");
+        }
+
         String name = request.getName();
         String description = request.getDescription();
         int price = request.getPrice();
@@ -123,7 +147,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Service name too long");
         }
 
-        Long userId = sessionDAO.getUserId("$2a$10$8FkXscJrko56Y4r7CWVoOe3XFHJx9lccEZuzRL7WJCkN0f127Im/.");
+        Long userId = findUserByToken(sessionId, token);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to update service");
         }
@@ -149,21 +173,29 @@ public class ServiceController {
 
 
     @RequestMapping(path = "/services/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteService(@PathVariable(name = "id") long serviceId) {
+    public ResponseEntity<?> deleteService(@CookieValue(required = false, name = "session_id") Long sessionId,
+                                           @CookieValue(required = false) String token,
+                                           @PathVariable(name = "id") long serviceId) {
 
-        Long userId = sessionDAO.getUserId("$2a$10$8FkXscJrko56Y4r7CWVoOe3XFHJx9lccEZuzRL7WJCkN0f127Im/.");
+        if (sessionId == null || StringUtils.isEmpty(token)) {
+            logger.debug("No cookie represent");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to delete service");
+        }
+
+        Long userId = findUserByToken(sessionId, token);
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to update service");
+            logger.debug("No session found for this token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to delete service");
         }
 
         Service service = serviceDAO.getServiceById(serviceId);
         if (service == null) {
-            logger.debug("Deleted service failed because service {} doesn't exist", serviceId);
+            logger.debug("Deleting service failed because service {} doesn't exist", serviceId);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Service not found");
         }
 
         if (service.getUserId() != userId) {
-            logger.debug("Updating service failed because user {} is not author of service with id = {}", userId, serviceId);
+            logger.debug("Deleting service failed because user {} is not author of service with id = {}", userId, serviceId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You have not access to do it");
         }
 
@@ -173,10 +205,20 @@ public class ServiceController {
     }
 
 
+    private Long findUserByToken(long sessionId, String rawToken) {
+        Session session = sessionDAO.getSession(sessionId);
+        if (session == null) {
+            return null;
+        }
+        if (passwordEncoder.matches(rawToken, session.getToken())) {
+            return session.getUserId();
+        }
+        else {
+            return null;
+        }
+    }
 
-
-
-        private static class ServiceRequest {
+    private static class ServiceRequest {
         protected String name;
         protected String description;
         protected int price;
