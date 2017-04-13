@@ -5,8 +5,10 @@ import com.projectx.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,7 @@ import java.util.Map;
 public class UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAO.class.getSimpleName());
 
-    private static final String TABLE_NAME = "users";
+    static final String TABLE_NAME = "users";
     private final JdbcTemplate template;
 
     public static final int NAME_LENGTH = 30;
@@ -38,13 +40,14 @@ public class UserDAO {
         this.template = template;
     }
 
-    public void initTable() {
+    void initTable() {
         final String createTable = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + '(' +
                 "id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY," +        // Up to 16.777.215 rows
                 "name VARCHAR(" + NAME_LENGTH + ") NOT NULL," +
                 "email VARCHAR(" + EMAIL_LENGTH + ") NOT NULL UNIQUE," +
-                "phone VARCHAR(" + PHONE_LENGTH + ") NOT NULL UNIQUE," +
-                "password CHAR(60) NOT NULL) " +
+                "phone CHAR(" + PHONE_LENGTH + ") NOT NULL UNIQUE," +
+                "password CHAR(60) NOT NULL," +
+                "KEY(email))" +
                 "DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci";
         template.execute(createTable);
         logger.debug("Table users initialized");
@@ -65,42 +68,36 @@ public class UserDAO {
     }
 
 
-//    private void makeJob(String deviceId, String column) {
-//        final String query = "SELECT count(*) FROM " + TABLE_NAME + " WHERE device_id = ?;";
-//        final int rows = template.queryForObject(query, Integer.class, deviceId);
-//        if (rows == 0) {
-//            LOGGER.info("User with deviceId = {} NOT FOUND, creating new...", deviceId);
-//            addNewUser(deviceId);
-//        }
-//
-//        LOGGER.info("Incrementing {} for user {}...", column, deviceId);
-//        final String updateQuery = "UPDATE " + TABLE_NAME +
-//                " SET " + column + " = " + column + " + 1 WHERE device_id = ?";
-//        template.update(updateQuery, deviceId);
-//    }
-//
-//
-//    private void addNewUser(String deviceId) {
-//        final String query = "INSERT INTO " + TABLE_NAME +
-//                " (device_id) VALUES (?)";
-//        template.update(query, deviceId);
-//    }
-//
-//    public List<UserStat> getAllUsers() {
-//        return template.query("SELECT * FROM " + TABLE_NAME, userMapper);
-//    }
-//
-//
-//    RowMapper<UserStat> userMapper = (rs, i) -> {
-//        final UserStat user = new UserStat();
-//        user.setDeviceId(rs.getString("device_id"));
-//        user.setFileImport(rs.getInt("file_import"));
-//        user.setFileExport(rs.getInt("file_export"));
-//        user.setExcelExport(rs.getInt("excel_export"));
-//        user.setGoogleBackup(rs.getInt("google_backup"));
-//        user.setGoogleRestore(rs.getInt("google_restore"));
-//        return user;
-//    };
+
+    public User getUserByEmail(String email)  {
+        final String query = "SELECT * FROM " + TABLE_NAME + " WHERE email = ?;";
+        try {
+            return template.queryForObject(query, userMapper, email);
+        }
+        catch (EmptyResultDataAccessException ex) {
+            return null;
+        }
+    }
+
+    public User getUserById(long id)  {
+        final String query = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?;";
+        try {
+            return template.queryForObject(query, userMapper, id);
+        }
+        catch (EmptyResultDataAccessException ex) {
+            return null;
+        }
+    }
+
+    private final RowMapper<User> userMapper = (rs, i) -> {
+        final User user = new User();
+        user.setId(rs.getLong("id"));
+        user.setName(rs.getString("name"));
+        user.setEmail(rs.getString("email"));
+        user.setPhone(rs.getString("phone"));
+        user.setPassword(rs.getString("password"));
+        return user;
+    };
 
 
     private static class UserPstCreator implements PreparedStatementCreator {
@@ -109,7 +106,6 @@ public class UserDAO {
         UserPstCreator(User user) {
             this.user = user;
         }
-
         @Override
         public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
             final String query = "INSERT INTO " + TABLE_NAME +

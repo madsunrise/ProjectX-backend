@@ -28,6 +28,8 @@ paths:
               $ref: "#/definitions/AuthResponse"
         403:
           description: Invalid login or password
+        404:
+          description: User not found
         default:
           description: Unexpected error
           
@@ -48,6 +50,11 @@ paths:
               $ref: "#/definitions/AuthResponse"
         409:
           description: This email has already taken
+          
+        400:
+          description: Bad parametres
+          schema:
+            $ref: '#/definitions/Error'
           
         default:
           description: Unexpected error
@@ -124,6 +131,7 @@ definitions:
     type: object
     properties:
       login:
+        description: It's only email yet
         type: string
         maxLength: 50
       password:
@@ -133,6 +141,9 @@ definitions:
   SignupRequest:
     type: object
     properties:
+      name:
+        type: string
+        maxLength: 30   
       email:
         type: string
         maxLength: 50
@@ -140,9 +151,6 @@ definitions:
         type: string
         maxLength: 10 
         description: Phone format 9161234567
-      name:
-        type: string
-        maxLength: 30
       password:
         type: string
         maxLength: 30
@@ -201,8 +209,6 @@ definitions:
   Error:
     type: object
     properties:
-      code:
-        type: integer
       message:
         type: string
         
