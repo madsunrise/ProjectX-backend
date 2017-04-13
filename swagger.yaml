@@ -1,0 +1,210 @@
+swagger: '2.0'
+info:
+  title: ProjectX API
+  version: "1.0.0"
+# the domain of the service
+host: api.projectx.com
+# array of all schemes that your API supports
+schemes:
+  - http
+# will be prefixed to all paths
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /login:
+    post:
+      summary: User authentication
+      parameters: 
+        - name: body
+          in: body
+          required: true
+          schema: 
+              $ref: "#/definitions/LoginRequest"
+      responses:
+        200:
+          description: Authentication success
+          schema:
+              $ref: "#/definitions/AuthResponse"
+        403:
+          description: Invalid login or password
+        default:
+          description: Unexpected error
+          
+  /signup:
+    post:
+      summary: Registration new user
+      parameters: 
+        - name: body
+          in: body
+          required: true
+          schema: 
+              $ref: "#/definitions/SignupRequest"
+              
+      responses:
+        200:
+          description: Registration success
+          schema:
+              $ref: "#/definitions/AuthResponse"
+        409:
+          description: This email has already taken
+          
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      
+    
+  
+  /services:
+    get:
+      summary: Get available services
+      parameters:
+        - name: category
+          in: query
+          required: false
+          type: string
+          
+        - name: sort
+          in: query
+          required: true
+          type: string
+          enum: ["newest", "rating", "best_match"]
+          
+        - name: page
+          in: query
+          required: true
+          type: integer
+          
+        - name: limit
+          in: query
+          required: true
+          type: integer
+          
+      tags:
+        - Services
+      responses:
+        200:
+          description: An array of services
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Service'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+            
+  /profile:
+    post:
+      summary: Get user's account info
+      parameters: 
+        - name: token
+          in: body
+          required: true  
+          schema: 
+              $ref: "#/definitions/AccountRequest"
+      responses:
+        200:
+          description: Account info
+          schema:
+              $ref: "#/definitions/User"
+        403:
+          description: Invalid token
+          
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+  
+ 
+definitions:
+
+  LoginRequest:
+    type: object
+    properties:
+      login:
+        type: string
+        maxLength: 50
+      password:
+        type: string
+        maxLength: 30
+        
+  SignupRequest:
+    type: object
+    properties:
+      email:
+        type: string
+        maxLength: 50
+      phone:
+        type: string
+        maxLength: 10 
+        description: Phone format 9161234567
+      name:
+        type: string
+        maxLength: 30
+      password:
+        type: string
+        maxLength: 30
+        
+        
+  AccountRequest:
+    type: object
+    properties:
+      token:
+        type: string
+    
+        
+  AuthResponse:
+    type: object
+    properties:
+      token:
+        type: string
+        
+  User:
+    type: object
+    properties:
+      id:
+        type: number
+        format: long
+      email:
+        type: string
+        maxLength: 50
+      phone:
+        type: string
+        maxLength: 10 
+      name:
+        type: string
+        maxLength: 30
+    
+      
+      
+  Service:
+    type: object
+    properties:
+      user_id:
+        type: number
+        format: long
+      name:
+        type: string
+        maxLength: 100
+      descriptions:
+        type: string
+      rating:
+        type: number
+        format: double
+      price:
+        type: number
+        format: integer
+        description: no cent in price
+        
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+        
+  
+      

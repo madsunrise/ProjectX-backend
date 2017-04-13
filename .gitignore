@@ -1,0 +1,16 @@
+ntelliJ
+/out/
+/target/
+
+.idea/*
+
+/src/com.projectx.com.projectx.main/resources/application.properties
+
+### Java ###
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.iml
