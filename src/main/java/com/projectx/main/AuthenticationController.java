@@ -10,22 +10,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
-import org.springframework.util.SystemPropertyUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.projectx.dao.UserDAO.EMAIL_LENGTH;
-import static com.projectx.dao.UserDAO.NAME_LENGTH;
-import static com.projectx.dao.UserDAO.PHONE_LENGTH;
+import static com.projectx.dao.UserDAO.*;
 
 /**
  * Created by ivan on 13.04.17.
  */
 
 @RestController
-@RequestMapping(path = "/v1")
 public class AuthenticationController {
     private final UserDAO userDAO;
     private final SessionDAO sessionDAO;

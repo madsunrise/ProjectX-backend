@@ -9,14 +9,15 @@ public class Service {
     private long id;
     private String name;
     private String description;
-    private int rating;
+    private int rating = 0;
     private int price;
     private long userId;
     private Date dateCreated;
 
-    public Service() {}
+    public Service() {
+    }
 
-    public Service(String name, String description, int rating, int price, long userId) {
+    public Service(String name, String description, int price, long userId) {
         this.name = name;
         this.description = description;
         this.rating = rating;
@@ -79,4 +80,18 @@ public class Service {
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
     }
+
+    @Override
+    public String toString() {
+        return "Service{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", rating=" + rating +
+                ", price=" + price +
+                ", userId=" + userId +
+                ", dateCreated=" + dateCreated +
+                '}';
+    }
 }
+

@@ -1,21 +1,22 @@
 package com.projectx.dao;
 
-import com.projectx.exception.DuplicateEntryException;
 import com.projectx.model.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -57,17 +58,22 @@ public class ServiceDAO {
     }
 
 
-    public long addService(Service service) throws DuplicateEntryException {
-        try {
-            final KeyHolder keyHolder = new GeneratedKeyHolder();
-            template.update(new ServicePstCreator(service), keyHolder);
-            final Map<String, Object> keys = keyHolder.getKeys();
-            BigInteger id =  (BigInteger) keys.get("GENERATED_KEY");
-            return id.longValue();
-        }
-        catch (DuplicateKeyException ex) {
-            throw new DuplicateEntryException(ex);
-        }
+    public long addService(Service service) {
+        final KeyHolder keyHolder = new GeneratedKeyHolder();
+        template.update(new ServicePstCreator(service), keyHolder);
+        final Map<String, Object> keys = keyHolder.getKeys();
+        BigInteger id =  (BigInteger) keys.get("GENERATED_KEY");
+        return id.longValue();
+    }
+
+    public void updateService(Service service) {
+        final String query = "UPDATE " + TABLE_NAME + " SET name=?, description=?, price=? WHERE id=?";
+        template.update(query, service.getName(), service.getDescription(), service.getPrice(), service.getId());
+    }
+
+    public void removeService(long id) {
+        final String query = "DELETE FROM " + TABLE_NAME + " WHERE id=?";
+        template.update(query, id);
     }
 
 
@@ -83,8 +89,9 @@ public class ServiceDAO {
     }
 
     public List<Service> getServices(int page, int limit) {
-        final String query = "SELECT * FROM " + TABLE_NAME + " LIMIT ?, ?";
-        return template.query(query, serviceMapper, page, limit);
+        final int offset = limit * (page - 1);
+        final String query = "SELECT * FROM " + TABLE_NAME + " LIMIT ? OFFSET ?";
+        return template.query(query, serviceMapper, limit, offset);
     }
 
     private final RowMapper<Service> serviceMapper = (rs, i) -> {
@@ -95,7 +102,8 @@ public class ServiceDAO {
         service.setRating(rs.getInt("rating"));
         service.setPrice(rs.getInt("price"));
         service.setUserId(rs.getLong("user_id"));
-        service.setDateCreated(rs.getTimestamp("date"));
+        Date date = rs.getTimestamp("date");
+        service.setDateCreated(date);
         return service;
     };
 
