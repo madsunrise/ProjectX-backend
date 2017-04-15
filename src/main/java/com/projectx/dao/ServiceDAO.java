@@ -90,7 +90,7 @@ public class ServiceDAO {
 
     public List<Service> getServices(int page, int limit) {
         final int offset = limit * (page - 1);
-        final String query = "SELECT * FROM " + TABLE_NAME + " LIMIT ? OFFSET ?";
+        final String query = "SELECT * FROM " + TABLE_NAME + " ORDER BY date DESC LIMIT ? OFFSET ?";
         return template.query(query, serviceMapper, limit, offset);
     }
 

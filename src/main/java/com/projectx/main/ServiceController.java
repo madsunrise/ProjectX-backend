@@ -31,20 +31,7 @@ public class ServiceController {
         this.serviceDAO = serviceDAO;
         this.passwordEncoder = passwordEncoder;
     }
-
-    @RequestMapping(path = "/fill_random", method = RequestMethod.GET)
-    public ResponseEntity<?> fillRandomRecords(@RequestParam long count) throws Exception {
-        for (int i = 1; i <= count; ++i) {
-            Service service = new Service();
-            service.setPrice(i * 1000);
-            service.setRating((i * 39) % 50);
-            service.setDescription("Some description for service #" + i);
-            service.setName("Service #" + i);
-            service.setUserId(3L);
-            serviceDAO.addService(service);
-        }
-        return ResponseEntity.ok("OK");
-    }
+    
 
 
     @RequestMapping(path = "/services", method = RequestMethod.GET)
@@ -56,7 +43,6 @@ public class ServiceController {
         if (page == null) {
             page = 1;
         }
-
         if (page <= 0 || limit <= 0) {
             logger.debug("Failed to get services due to bad request: {}");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Wrong parameters");
@@ -107,8 +93,6 @@ public class ServiceController {
 
 
 
-
-
     @RequestMapping(path = "/services/{id}", method = RequestMethod.GET)
     public ResponseEntity<?> getServiceInfo(@PathVariable long id) {
         Service service = serviceDAO.getServiceById(id);
@@ -116,10 +100,8 @@ public class ServiceController {
             logger.debug("Failed getting info about service with id={} - it doesn't exist", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
-        ServiceResponse response = new ServiceResponse(service);
-        logger.debug("Getting info for service {} is successful, info: {}", id, response);
-        return ResponseEntity.ok(response);
+        logger.debug("Getting info for service {} is successful, info: {}", id, service);
+        return ResponseEntity.ok(service);
     }
 
     @RequestMapping(path = "/services/{id}", method = RequestMethod.PUT)
@@ -219,9 +201,9 @@ public class ServiceController {
     }
 
     private static class ServiceRequest {
-        protected String name;
-        protected String description;
-        protected int price;
+        private String name;
+        private String description;
+        private int price;
 
         public String getName() {
             return name;
@@ -245,49 +227,6 @@ public class ServiceController {
 
         public void setPrice(int price) {
             this.price = price;
-        }
-    }
-
-    private static class ServiceResponse extends ServiceRequest {
-        private int rating;
-        private long id;
-
-        public ServiceResponse() {
-        }
-
-        public ServiceResponse(Service service) {
-            this.id = service.getId();
-            this.name = service.getName();
-            this.description = service.getDescription();
-            this.price = service.getPrice();
-            this.rating = service.getRating();
-        }
-
-        public int getRating() {
-            return rating;
-        }
-
-        public void setRating(int rating) {
-            this.rating = rating;
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            return "ServiceResponse{" +
-                    "id=" + id + '\'' +
-                    ", name='" + name + '\'' +
-                    ", description='" + description + '\'' +
-                    ", price=" + price + '\'' +
-                    ", rating=" + rating +
-                    '}';
         }
     }
 

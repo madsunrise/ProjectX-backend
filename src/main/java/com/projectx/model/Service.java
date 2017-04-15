@@ -1,5 +1,7 @@
 package com.projectx.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 
 /**
@@ -12,7 +14,8 @@ public class Service {
     private int rating = 0;
     private int price;
     private long userId;
-    private Date dateCreated;
+    @JsonProperty("date_created")
+    private Date dateCreated = new Date();
 
     public Service() {
     }
@@ -20,7 +23,6 @@ public class Service {
     public Service(String name, String description, int price, long userId) {
         this.name = name;
         this.description = description;
-        this.rating = rating;
         this.price = price;
         this.userId = userId;
     }
