@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,9 +30,11 @@ public class SessionDAO {
 
     static final String TABLE_NAME = "session";
     private final JdbcTemplate template;
+    private final PasswordEncoder passwordEncoder;
 
-    public SessionDAO(JdbcTemplate template) {
+    public SessionDAO(JdbcTemplate template, PasswordEncoder passwordEncoder) {
         this.template = template;
+        this.passwordEncoder = passwordEncoder;
     }
 
     void initTable() {
@@ -89,6 +92,18 @@ public class SessionDAO {
             pst.setString(1, session.getToken());
             pst.setLong(2, session.getUserId());
             return pst;
+        }
+    }
+
+    public Long getUser (long sessionId, String rawToken) {
+        Session session = getSession(sessionId);
+        if (session == null) {
+            return null;
+        }
+        if (passwordEncoder.matches(rawToken, session.getToken())) {
+            return session.getUserId();
+        } else {
+            return null;
         }
     }
 }

@@ -84,7 +84,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Service name too long");
         }
 
-        Long userId = findUserByToken(sessionId, token);
+        Long userId = sessionDAO.getUser(sessionId, token);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to create new service");
         }
@@ -135,7 +135,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Service name too long");
         }
 
-        Long userId = findUserByToken(sessionId, token);
+        Long userId = sessionDAO.getUser(sessionId, token);
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to update service");
         }
@@ -170,7 +170,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to delete service");
         }
 
-        Long userId = findUserByToken(sessionId, token);
+        Long userId = sessionDAO.getUser(sessionId, token);
         if (userId == null) {
             logger.debug("No session found for this token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to delete service");
@@ -192,19 +192,6 @@ public class ServiceController {
         return ResponseEntity.ok(null);
     }
 
-
-    private Long findUserByToken(long sessionId, String rawToken) {
-        Session session = sessionDAO.getSession(sessionId);
-        if (session == null) {
-            return null;
-        }
-        if (passwordEncoder.matches(rawToken, session.getToken())) {
-            return session.getUserId();
-        }
-        else {
-            return null;
-        }
-    }
 
     private static class ServiceRequest {
         private String name;

@@ -131,7 +131,7 @@ public class AuthenticationController {
     public ResponseEntity<?> isAuth(@CookieValue(required = false, name = "session_id") Long sessionId,
                                     @CookieValue(required = false) String token) {
 
-        if (sessionId == null || StringUtils.isEmpty(token)) {
+        if (sessionId == null || StringUtils.isEmpty(token) || sessionDAO.getUser(sessionId, token) == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are unauthorized!");
         }
         return ResponseEntity.ok("Auth OK!");
