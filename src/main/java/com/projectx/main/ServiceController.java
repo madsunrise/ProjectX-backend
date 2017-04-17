@@ -3,8 +3,8 @@ package com.projectx.main;
 import com.projectx.dao.ServiceDAO;
 import com.projectx.dao.SessionDAO;
 import com.projectx.model.Service;
-import com.projectx.model.Session;
 import com.projectx.response.BasicServiceResponse;
+import com.projectx.response.FullServiceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -132,7 +132,7 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         logger.debug("Getting info for service {} is successful, info: {}", id, service);
-        return ResponseEntity.ok(service);
+        return ResponseEntity.ok(new FullServiceResponse(service));
     }
 
     @RequestMapping(path = "/services/{id}", method = RequestMethod.PUT)
