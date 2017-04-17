@@ -12,8 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 import static com.projectx.dao.ServiceDAO.SERVICE_NAME_LENGTH;
@@ -37,7 +44,8 @@ public class ServiceController {
 
 
     @RequestMapping(path = "/services", method = RequestMethod.GET)
-    public ResponseEntity<?> listServices(@RequestParam(required = false) String category,
+    public ResponseEntity<?> listServices(@RequestParam(required = false, name = "user") Long userId,
+                                          @RequestParam(required = false) String category,
                                           @RequestParam(required = false) Integer page,
                                           @RequestParam(required = false) String sort,
                                           @RequestParam int limit) {
@@ -50,7 +58,14 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Wrong parameters");
         }
 
-        List<Service> services = serviceDAO.getServices(page, limit);
+        List<Service> services;
+        if (userId != null) {
+            services = serviceDAO.getServicesForUser(userId, page, limit);
+        }
+        else {
+            services = serviceDAO.getServices(page, limit);
+        }
+
         List<BasicServiceResponse> response = new ArrayList<>();
         for (Service service: services) {
             response.add(new BasicServiceResponse(service));
@@ -63,7 +78,7 @@ public class ServiceController {
     @RequestMapping(path = "/services", method = RequestMethod.POST)
     public ResponseEntity<?> createService(@CookieValue(required = false, name = "session_id") Long sessionId,
                                            @CookieValue(required = false) String token,
-                                           @RequestBody ServiceRequest request) {
+                                           @RequestBody ServiceRequest request) throws IOException {
 
         if (sessionId == null || StringUtils.isEmpty(token)) {
             logger.debug("No cookie is represented");
@@ -89,11 +104,21 @@ public class ServiceController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to create new service");
         }
 
+
         Service service = new Service(name, description, price, userId);
+
+        List<String> photos = request.getPhotos();
+        List<String> fileNames = savePhotosToFiles(photos);
+        service.setPhotos(fileNames);
+
         serviceDAO.addService(service);
         logger.debug("Added new service by userID = {}: {}", userId, service);
         return ResponseEntity.ok(null);
     }
+
+
+
+
 
 
 
@@ -193,10 +218,38 @@ public class ServiceController {
     }
 
 
+
+    private synchronized List<String> savePhotosToFiles(List<String> photos) throws IOException {
+        List<String> fileNames = new ArrayList<>();
+        for (String base64: photos) {
+            String decoded = UriUtils.decode(base64, "UTF-8");
+            byte[] bytes = Base64.getDecoder().decode(decoded);
+            String fileName = new Date().getTime() + ".jpeg";
+            File file = new File("photos/" + fileName);
+            File photoDir = new File("photos");
+            if (!photoDir.exists()) {
+                if (!photoDir.mkdir()) {
+                    throw new IOException("Can not create /photos dir!");
+                };
+            }
+
+            if (!file.createNewFile()) {
+                throw new IOException("Can not create a file!");
+            };
+            OutputStream stream = new FileOutputStream(file);
+            stream.write(bytes);
+            stream.close();
+            fileNames.add(fileName);
+        }
+        return fileNames;
+    }
+
+
     private static class ServiceRequest {
         private String name;
         private String description;
         private int price;
+        private List<String> photos = new ArrayList<>();
 
         public String getName() {
             return name;
@@ -220,6 +273,14 @@ public class ServiceController {
 
         public void setPrice(int price) {
             this.price = price;
+        }
+
+        public List<String> getPhotos() {
+            return photos;
+        }
+
+        public void setPhotos(List<String> photos) {
+            this.photos = photos;
         }
     }
 

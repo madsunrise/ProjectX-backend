@@ -2,7 +2,10 @@ package com.projectx.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by ivan on 13.04.17.
@@ -16,6 +19,7 @@ public class Service {
     private long userId;
     @JsonProperty("date_created")
     private Date dateCreated = new Date();
+    private String photos;
 
     public Service() {
     }
@@ -81,6 +85,29 @@ public class Service {
 
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public String getRawPhotos() {
+        return this.photos;
+    }
+
+    public List<String> getPhotos() {
+        String[] split = photos.split("\\s+");
+        return Arrays.asList(split);
+    }
+
+    public void setRawPhotos(String photos) {
+        this.photos = photos;
+    }
+
+    public void setPhotos(List<String> fileNames) {
+        StringBuilder sb = new StringBuilder();
+        for (String fileName: fileNames) {
+            sb.append(fileName);
+            sb.append(" ");
+        }
+        sb.deleteCharAt(sb.length() - 1); // Last space
+        this.photos = sb.toString();
     }
 
     @Override

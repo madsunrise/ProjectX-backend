@@ -47,6 +47,7 @@ public class ServiceDAO {
                 "rating TINYINT DEFAULT 0," +           // For example 45 = 4.5, 30 = 3.0 etc
                 "price MEDIUMINT UNSIGNED DEFAULT 0," +
                 "user_id MEDIUMINT UNSIGNED NOT NULL," +
+                "photos TEXT," +
                 "FOREIGN KEY(user_id) REFERENCES " + UserDAO.TABLE_NAME + "(id) " +
                 "ON DELETE CASCADE," +
                 "KEY(date), " +
@@ -67,8 +68,8 @@ public class ServiceDAO {
     }
 
     public void updateService(Service service) {
-        final String query = "UPDATE " + TABLE_NAME + " SET name=?, description=?, price=? WHERE id=?";
-        template.update(query, service.getName(), service.getDescription(), service.getPrice(), service.getId());
+        final String query = "UPDATE " + TABLE_NAME + " SET name=?, description=?, price=?, photos=? WHERE id=?";
+        template.update(query, service.getName(), service.getDescription(), service.getPrice(), service.getId(), service.getPhotos());
     }
 
     public void removeService(long id) {
@@ -88,11 +89,20 @@ public class ServiceDAO {
         }
     }
 
+
     public List<Service> getServices(int page, int limit) {
         final int offset = limit * (page - 1);
         final String query = "SELECT * FROM " + TABLE_NAME + " ORDER BY date DESC LIMIT ? OFFSET ?";
         return template.query(query, serviceMapper, limit, offset);
     }
+
+    public List<Service> getServicesForUser(long userId, int page, int limit) {
+        final int offset = limit * (page - 1);
+        final String query = "SELECT * FROM " + TABLE_NAME + " WHERE user_id = ? ORDER BY date DESC LIMIT ? OFFSET ?";
+        return template.query(query, serviceMapper, userId, limit, offset);
+    }
+
+
 
     private final RowMapper<Service> serviceMapper = (rs, i) -> {
         final Service service = new Service();
@@ -104,6 +114,7 @@ public class ServiceDAO {
         service.setUserId(rs.getLong("user_id"));
         Date date = rs.getTimestamp("date");
         service.setDateCreated(date);
+        service.setRawPhotos(rs.getString("photos"));
         return service;
     };
 
@@ -117,13 +128,14 @@ public class ServiceDAO {
         @Override
         public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
             final String query = "INSERT INTO " + TABLE_NAME +
-                    " (name, description, price, user_id) VALUES (?,?,?,?);";
+                    " (name, description, price, user_id, photos) VALUES (?,?,?,?,?);";
             final PreparedStatement pst = con.prepareStatement(query,
                     Statement.RETURN_GENERATED_KEYS);
             pst.setString(1, service.getName());
             pst.setString(2, service.getDescription());
             pst.setInt(3, service.getPrice());
             pst.setLong(4, service.getUserId());
+            pst.setString(5, service.getRawPhotos());
             return pst;
         }
     }
