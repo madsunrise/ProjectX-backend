@@ -117,14 +117,13 @@ public class ServiceDAO {
         @Override
         public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
             final String query = "INSERT INTO " + TABLE_NAME +
-                    " (name, description, rating, price, user_id) VALUES (?,?,?,?,?);";
+                    " (name, description, price, user_id) VALUES (?,?,?,?);";
             final PreparedStatement pst = con.prepareStatement(query,
                     Statement.RETURN_GENERATED_KEYS);
             pst.setString(1, service.getName());
             pst.setString(2, service.getDescription());
-            pst.setInt(3, service.getRating());
-            pst.setInt(4, service.getPrice());
-            pst.setLong(5, service.getUserId());
+            pst.setInt(3, service.getPrice());
+            pst.setLong(4, service.getUserId());
             return pst;
         }
     }

@@ -11,7 +11,7 @@ public class Service {
     private long id;
     private String name;
     private String description;
-    private int rating = 0;
+    private int rating;
     private int price;
     private long userId;
     @JsonProperty("date_created")

@@ -4,6 +4,7 @@ import com.projectx.dao.ServiceDAO;
 import com.projectx.dao.SessionDAO;
 import com.projectx.model.Service;
 import com.projectx.model.Session;
+import com.projectx.response.BasicServiceResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.projectx.dao.ServiceDAO.SERVICE_NAME_LENGTH;
@@ -49,7 +51,11 @@ public class ServiceController {
         }
 
         List<Service> services = serviceDAO.getServices(page, limit);
-        return ResponseEntity.ok(services);
+        List<BasicServiceResponse> response = new ArrayList<>();
+        for (Service service: services) {
+            response.add(new BasicServiceResponse(service));
+        }
+        return ResponseEntity.ok(response);
     }
 
 

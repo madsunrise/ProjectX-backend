@@ -11,10 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -127,6 +124,17 @@ public class AuthenticationController {
 
         logger.debug("Authorization failed - incorrect password for user with login {}", login);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+    }
+
+
+    @RequestMapping(path = "/isAuth", method = RequestMethod.POST)
+    public ResponseEntity<?> isAuth(@CookieValue(required = false, name = "session_id") Long sessionId,
+                                    @CookieValue(required = false) String token) {
+
+        if (sessionId == null || StringUtils.isEmpty(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are unauthorized!");
+        }
+        return ResponseEntity.ok("Auth OK!");
     }
 
 
