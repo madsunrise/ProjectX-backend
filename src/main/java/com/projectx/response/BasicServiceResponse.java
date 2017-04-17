@@ -3,7 +3,9 @@ package com.projectx.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectx.model.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by ivan on 17.04.17.
@@ -15,6 +17,7 @@ public class BasicServiceResponse {
     private int price;
     @JsonProperty("date_created")
     private Date dateCreated;
+    List<String> photos = new ArrayList<>();
 
     public BasicServiceResponse() {
     }
@@ -25,6 +28,10 @@ public class BasicServiceResponse {
         this.rating = service.getRating();
         this.price = service.getPrice();
         this.dateCreated = service.getDateCreated();
+        List<String> servicePhotos = service.getPhotoFileNames();
+        if (!servicePhotos.isEmpty()) {
+            this.photos.add(servicePhotos.get(0));
+        }
     }
 
     public long getId() {

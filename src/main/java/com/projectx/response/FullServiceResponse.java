@@ -10,7 +10,6 @@ import java.util.List;
 public class FullServiceResponse extends BasicServiceResponse {
     private String description;
     private long userId;
-    private List<String> photos;
 
     public FullServiceResponse() {
     }
@@ -19,7 +18,7 @@ public class FullServiceResponse extends BasicServiceResponse {
         super(service);
         this.description = service.getDescription();
         this.userId = service.getUserId();
-        this.photos = service.getPhotos();
+        this.photos = service.getPhotoFileNames();
     }
 
     public String getDescription() {

@@ -5,6 +5,7 @@ import com.projectx.dao.SessionDAO;
 import com.projectx.model.Service;
 import com.projectx.response.BasicServiceResponse;
 import com.projectx.response.FullServiceResponse;
+import com.projectx.utils.PhotoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -108,7 +109,7 @@ public class ServiceController {
         Service service = new Service(name, description, price, userId);
 
         List<String> photos = request.getPhotos();
-        List<String> fileNames = savePhotosToFiles(photos);
+        List<String> fileNames = PhotoService.savePhotosToFiles(photos);
         service.setPhotos(fileNames);
 
         serviceDAO.addService(service);
@@ -218,31 +219,6 @@ public class ServiceController {
     }
 
 
-
-    private synchronized List<String> savePhotosToFiles(List<String> photos) throws IOException {
-        List<String> fileNames = new ArrayList<>();
-        for (String base64: photos) {
-            String decoded = UriUtils.decode(base64, "UTF-8");
-            byte[] bytes = Base64.getDecoder().decode(decoded);
-            String fileName = new Date().getTime() + ".jpeg";
-            File file = new File("photos/" + fileName);
-            File photoDir = new File("photos");
-            if (!photoDir.exists()) {
-                if (!photoDir.mkdir()) {
-                    throw new IOException("Can not create /photos dir!");
-                };
-            }
-
-            if (!file.createNewFile()) {
-                throw new IOException("Can not create a file!");
-            };
-            OutputStream stream = new FileOutputStream(file);
-            stream.write(bytes);
-            stream.close();
-            fileNames.add(fileName);
-        }
-        return fileNames;
-    }
 
 
     private static class ServiceRequest {

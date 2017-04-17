@@ -91,9 +91,12 @@ public class Service {
         return this.photos;
     }
 
-    public List<String> getPhotos() {
-        String[] split = photos.split("\\s+");
-        return Arrays.asList(split);
+    public List<String> getPhotoFileNames() {
+        if (photos != null && !photos.isEmpty()) {
+            String[] split = photos.split("\\s+");
+            return Arrays.asList(split);
+        }
+        else return new ArrayList<>();
     }
 
     public void setRawPhotos(String photos) {

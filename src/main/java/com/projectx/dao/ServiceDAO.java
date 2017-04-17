@@ -69,7 +69,7 @@ public class ServiceDAO {
 
     public void updateService(Service service) {
         final String query = "UPDATE " + TABLE_NAME + " SET name=?, description=?, price=?, photos=? WHERE id=?";
-        template.update(query, service.getName(), service.getDescription(), service.getPrice(), service.getId(), service.getPhotos());
+        template.update(query, service.getName(), service.getDescription(), service.getPrice(), service.getId(), service.getPhotoFileNames());
     }
 
     public void removeService(long id) {
