@@ -106,7 +106,9 @@ public class Service {
             sb.append(fileName);
             sb.append(" ");
         }
-        sb.deleteCharAt(sb.length() - 1); // Last space
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1); // Last space
+        }
         this.photos = sb.toString();
     }
 
