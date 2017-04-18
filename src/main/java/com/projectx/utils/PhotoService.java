@@ -22,14 +22,16 @@ public class PhotoService {
         for (String base64: photos) {
             String decoded = UriUtils.decode(base64, "UTF-8");
             byte[] bytes = Base64.getDecoder().decode(decoded);
-            String fileName = new Date().getTime() + ".jpeg";
-            File file = new File("photos/v1/" + fileName);
-            File photoDir = new File("photos/v1");
-            if (!photoDir.exists()) {
-                if (!photoDir.mkdirs()) {
-                    throw new IOException("Can not create /photos dir!");
-                };
-            }
+            String fileName = System.currentTimeMillis() + ".jpeg";
+
+            String path = "photos/v1";
+            File photoDir = new File(path);
+
+            if (!photoDir.mkdirs()) {
+                throw new IOException("Can not create /photos dir!");
+            };
+
+            File file = new File(photoDir, fileName);
 
             if (!file.createNewFile()) {
                 throw new IOException("Can not create a file!");
