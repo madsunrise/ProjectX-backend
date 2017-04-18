@@ -50,7 +50,7 @@ public class UserDAO {
                 "KEY(email))" +
                 "DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci";
         template.execute(createTable);
-        logger.debug("Table users initialized");
+        logger.info("Table users initialized");
     }
 
 

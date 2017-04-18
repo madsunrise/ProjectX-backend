@@ -47,7 +47,7 @@ public class SessionDAO {
                 "UNIQUE (token, user_id))" +
                 "DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci";
         template.execute(createTable);
-        logger.debug("Table session was initialized");
+        logger.info("Table session was initialized");
     }
 
 

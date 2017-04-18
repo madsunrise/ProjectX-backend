@@ -10,7 +10,7 @@
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/bestbefore.%d{yyyy-MM}.log</fileNamePattern>
+            <fileNamePattern>logs/projectx.%d{yyyy-MM}.log</fileNamePattern>
         </rollingPolicy>
 
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">

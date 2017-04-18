@@ -47,13 +47,13 @@ public class AuthenticationController {
 
         if (StringUtils.isEmpty(name) || StringUtils.isEmpty(email)
                 || StringUtils.isEmpty(password) || StringUtils.isEmpty(phone)) {
-            logger.debug("Registration failed (not enough parametres)");
+            logger.info("Registration failed (not enough parametres)");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not enough parametres");
         }
 
         if (name.length() > NAME_LENGTH || email.length() > EMAIL_LENGTH ||
                 phone.length() != PHONE_LENGTH) {
-            logger.debug("Registration failed (parameter length was exceed)");
+            logger.info("Registration failed (parameter length was exceed)");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid parameters length");
         }
 
@@ -65,12 +65,12 @@ public class AuthenticationController {
             user.setId(id);
         }
         catch (DuplicateEntryException ex) {
-            logger.debug("User {} already exists!", user);
+            logger.info("User {} already exists!", user);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }
 
 
-        logger.debug("Creating new user with email \"{}\" is successful", email);
+        logger.info("Creating new user with email \"{}\" is successful", email);
         String time = String.valueOf(System.currentTimeMillis());
         String token = passwordEncoder.encode(time);;
 
@@ -95,18 +95,18 @@ public class AuthenticationController {
 
         if (StringUtils.isEmpty(login)
                 || StringUtils.isEmpty(password)) {
-            logger.debug("Authorization failed (bad parametres)");
+            logger.info("Authorization failed (bad parametres)");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not enough parametres");
         }
 
         final User user = userDAO.getUserByEmail(login);
         if (user == null) {
-            logger.debug("Authorization failed because user {} does not exist", login);
+            logger.info("Authorization failed because user {} does not exist", login);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
 
         if (passwordEncoder.matches(password, user.getPassword())) {
-            logger.debug("Authorization OK for user with login = {}", login);
+            logger.info("Authorization OK for user with login = {}", login);
             String time = String.valueOf(System.currentTimeMillis());
             String token = passwordEncoder.encode(time);
 
@@ -122,7 +122,7 @@ public class AuthenticationController {
             return ResponseEntity.ok(null);
         }
 
-        logger.debug("Authorization failed - incorrect password for user with login {}", login);
+        logger.info("Authorization failed - incorrect password for user with login {}", login);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 

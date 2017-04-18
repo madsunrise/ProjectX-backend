@@ -55,7 +55,7 @@ public class ServiceDAO {
                 "KEY(price))" +
                 "DEFAULT CHARSET utf8 DEFAULT COLLATE utf8_general_ci";
         template.execute(createTable);
-        logger.debug("Table service initialized");
+        logger.info("Table service initialized");
     }
 
 
