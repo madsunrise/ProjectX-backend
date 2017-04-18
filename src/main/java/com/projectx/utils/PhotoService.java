@@ -27,9 +27,11 @@ public class PhotoService {
             String path = "photos/v1";
             File photoDir = new File(path);
 
-            if (!photoDir.mkdirs()) {
-                throw new IOException("Can not create /photos dir!");
-            };
+            if (!photoDir.exists()) {
+                if (!photoDir.mkdirs()) {
+                    throw new IOException("Can not create /photos dir!");
+                }
+            }
 
             File file = new File(photoDir, fileName);
 
