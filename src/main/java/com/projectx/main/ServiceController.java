@@ -122,10 +122,41 @@ public class ServiceController {
 
 
 
+    @RequestMapping(path = "/my_services", method = RequestMethod.GET)
+    public ResponseEntity<?> createService(@CookieValue(required = false, name = "session_id") Long sessionId,
+                                           @CookieValue(required = false) String token,
+                                           @RequestParam(required = false) Integer page,
+                                           @RequestParam int limit) throws IOException {
+
+        if (sessionId == null || StringUtils.isEmpty(token)) {
+            logger.debug("No cookie is represented");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to create service");
+        }
+
+        Long userId = sessionDAO.getUser(sessionId, token);
+        if (userId == null) {
+            logger.debug("No session found for this token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Please log in to delete service");
+        }
+
+        if (page == null) {
+            page = 1;
+        }
+
+        List<Service> services = serviceDAO.getServicesForUser(userId, page, limit);
+
+        List<BasicServiceResponse> response = new ArrayList<>();
+        for (Service service: services) {
+            response.add(new BasicServiceResponse(service));
+        }
+        return ResponseEntity.ok(response);
+    }
 
 
 
-    @RequestMapping(path = "/services/{id}", method = RequestMethod.GET)
+
+
+        @RequestMapping(path = "/services/{id}", method = RequestMethod.GET)
     public ResponseEntity<?> getServiceInfo(@PathVariable long id) {
         Service service = serviceDAO.getServiceById(id);
         if (service == null) {
