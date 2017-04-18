@@ -23,10 +23,10 @@ public class PhotoService {
             String decoded = UriUtils.decode(base64, "UTF-8");
             byte[] bytes = Base64.getDecoder().decode(decoded);
             String fileName = new Date().getTime() + ".jpeg";
-            File file = new File("photos/" + fileName);
-            File photoDir = new File("photos");
+            File file = new File("photos/v1/" + fileName);
+            File photoDir = new File("photos/v1");
             if (!photoDir.exists()) {
-                if (!photoDir.mkdir()) {
+                if (!photoDir.mkdirs()) {
                     throw new IOException("Can not create /photos dir!");
                 };
             }
@@ -41,6 +41,4 @@ public class PhotoService {
         }
         return fileNames;
     }
-
-
 }
