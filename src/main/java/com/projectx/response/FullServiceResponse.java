@@ -46,4 +46,12 @@ public class FullServiceResponse extends BasicServiceResponse {
     public void setPhotos(List<String> photos) {
         this.photos = photos;
     }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
 }
