@@ -138,6 +138,16 @@ public class AuthenticationController {
     }
 
 
+    @RequestMapping(path = "/userInfo", method = RequestMethod.GET)
+    public ResponseEntity<?> getEmailById(@RequestParam("id") long userId) {
+        User user = userDAO.getUserById(userId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+        return ResponseEntity.ok(user.getEmail());
+    }
+
+
     private static class SignupRequest {
         private String name;
         private String email;
