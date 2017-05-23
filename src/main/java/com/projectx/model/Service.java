@@ -17,6 +17,7 @@ public class Service {
     private int rating;
     private int price;
     private long userId;
+    private String userEmail;
     @JsonProperty("date_created")
     private Date dateCreated = new Date();
     private String photos;
@@ -113,6 +114,14 @@ public class Service {
             sb.deleteCharAt(sb.length() - 1); // Last space
         }
         this.photos = sb.toString();
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
     @Override

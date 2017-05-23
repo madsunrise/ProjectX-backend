@@ -157,7 +157,7 @@ public class ServiceController {
 
 
 
-        @RequestMapping(path = "/services/{id}", method = RequestMethod.GET)
+    @RequestMapping(path = "/services/{id}", method = RequestMethod.GET)
     public ResponseEntity<?> getServiceInfo(@PathVariable long id) {
         Service service = serviceDAO.getServiceById(id);
         if (service == null) {

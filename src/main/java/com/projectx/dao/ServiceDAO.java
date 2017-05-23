@@ -1,6 +1,7 @@
 package com.projectx.dao;
 
 import com.projectx.model.Service;
+import com.projectx.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -33,9 +34,12 @@ public class ServiceDAO {
 
     public static final int SERVICE_NAME_LENGTH = 100;
 
+    private UserDAO userDAO;
 
-    public ServiceDAO(JdbcTemplate template) {
+
+    public ServiceDAO(JdbcTemplate template, UserDAO userDAO) {
         this.template = template;
+        this.userDAO = userDAO;
     }
 
     void initTable() {
@@ -82,7 +86,10 @@ public class ServiceDAO {
     public Service getServiceById(long id)  {
         final String query = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?;";
         try {
-            return template.queryForObject(query, serviceMapper, id);
+            Service service = template.queryForObject(query, serviceMapper, id);
+            User user = userDAO.getUserById(service.getUserId());
+            service.setUserEmail(user.getEmail());
+            return service;
         }
         catch (EmptyResultDataAccessException ex) {
             return null;
